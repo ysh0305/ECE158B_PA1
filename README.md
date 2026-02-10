@@ -2,6 +2,7 @@
 
 ##Topic 2: Web Proxy Server
 
-(1) (30pt) Implement the Proxy Server based on Skeleton Code. 
-(2) (25pt) Adding support for POST.
-(3) (45pt) Support for Web Caching
+(1) (30pt) Implement the Proxy Server based on Skeleton Code.\n
+
+(2) (25pt) Adding support for POST.\n
+(3) (45pt) Support for Web Caching\n
