@@ -3,7 +3,7 @@
 ##Topic 2: Web Proxy Server
 Make sure to configure your device to use this proxy.
 
-Note: The skeleton code is separated into multiple files to better collaborate and avoid merge conflicts.
+Note: The skeleton code is separated into multiple files to better collaborate and avoid merge conflicts. For cache to work, make sure to create a `cache` folder in the root of this repository.
 
 (1) (30pt) Implement the Proxy Server based on Skeleton Code. (DONE)
 
