@@ -1,6 +1,9 @@
 # Skeleton Python Code for the Proxy Server
 from socket import *
 import sys
+from http_parser import *
+from cache import *
+from fetch_server import *
 
 if len(sys.argv) <= 1:
     print('Usage : "python ProxyServer.py server_ip"\n[server_ip : It is the IP Address Of Proxy Server')
@@ -9,83 +12,42 @@ if len(sys.argv) <= 1:
 # Create a server socket, bind it to a port and start listening
 tcpSerSock = socket(AF_INET, SOCK_STREAM)
 
-# Fill in start.
 tcpSerSock.bind((sys.argv[1], 8888))
 tcpSerSock.listen(5)
-# Fill in end.
 
 while 1:
-    # Strat receiving data from the client
+    # Start receiving data from the client
     print('Ready to serve...')
     tcpCliSock, addr = tcpSerSock.accept()
     print('Received a connection from:', addr)
 
-    #Fill in start.
-    message = tcpCliSock.recv(1024) #filled in
-    #Fill in end.
-
+    # Recieve request
+    message = tcpCliSock.recv(4096).decode()
     print(message)
+
     # Extract the filename from the given message
-    print(message.split()[1])
-    filename = message.split()[1].partition("/")[2]
-    print(filename)
-    fileExist = "false"
-    filetouse = "/" + filename
-    print(filetouse)
+    filename = extract_filename(message)
+
     try:
         # Check wether the file exist in the cache
-        f = open(filetouse[1:], "r")
-        outputdata = f.readlines()
-        fileExist = "true"
+        outputdata = read_cache(filename)
+
         # ProxyServer finds a cache hit and generates a response message
-        tcpCliSock.send("HTTP/1.0 200 OK\r\n")
-        tcpCliSock.send("Content-Type:text/html\r\n")
+        send_cached_response(tcpCliSock, outputdata)
 
-        # Fill in start.
-        for i in range(0, len(outputdata)):
-            tcpCliSock.send(outputdata[i])
-        # Fill in end.
-
-        print('Read from cache')
     # Error handling for file not found in cache
     except IOError:
-        if fileExist == "false":
-            # Create a socket on the proxyserver
-            c = socket(AF_INET, SOCK_STREAM) # Fill in start. # Fill in end.
-            hostn = filename.replace("www.","",1)
-            print(hostn)
-            try:
-                # Connect to the socket to port 80
-                # Fill in start.
-                c.connect((hostn, 80))
-                # Fill in end.
+        hostn = extract_hostn(filename)
+        try:
+            fetch_from_server(hostn, filename, tcpCliSock)
 
-                # Create a temporary file on this socket and ask port 80 for the file requested by the client
-                fileobj = c.makefile('r', 0)
-                fileobj.write("GET "+"http://" + filename + " HTTP/1.0\n\n")
-
-                # Read the response into buffer
-                # Fill in start.
-                buffer = fileobj.readlines()
-                # Fill in end.
-                 
-                # Create a new file in the cache for the requested file.
-                # Also send the response in the buffer to client socket and the corresponding file in the cache
-                tmpFile = open("./" + filename,"wb")
-                # Fill in start.
-                for i in range(0, len(buffer)):
-                    tcpCliSock.send(buffer[i])
-                    tmpFile.write(buffer[i])
-                # Fill in end.
-            except:
-                print("Illegal request")
-        else:
+        #Print error to debug
+        except Exception as e:
+            print(repr(e))
             # HTTP response message for file not found
-            # Fill in start.
-            tcpCliSock.send("HTTP/1.0 404 Not Found\r\n")
-            tcpCliSock.send("Content-Type:text/html\r\n\r\n")
-            tcpCliSock.send("<html><body><h1>404 Not Found</h1></body></html>")
-            # Fill in end.
+            tcpCliSock.send(b"HTTP/1.0 404 Not Found\r\n")
+            tcpCliSock.send(b"Content-Type:text/html\r\n\r\n")
+            tcpCliSock.send(b"<html><body><h1>404 Not Found</h1></body></html>")
 
     # Close the client and the server sockets
     tcpCliSock.close()
