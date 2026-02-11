@@ -4,6 +4,7 @@
 Make sure to configure your device to use this proxy
 
 (1) (30pt) Implement the Proxy Server based on Skeleton Code. (DONE)
+The skeleton code is separated into multiple files to better collaborate and avoid merge conflicts.
 
 (2) (25pt) Adding support for POST.
 
