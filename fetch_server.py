@@ -1,22 +1,34 @@
 from socket import *
 
-def fetch_from_server(hostn, filename, tcpCliSock):
+def fetch_from_server(hostn, filename, tcpCliSock, message_byte, method):
     # Create a socket on the proxyserver
     c = socket(AF_INET, SOCK_STREAM)
-
+    
     # Connect to the socket to port 80
     c.connect((hostn, 80))
 
-    # Create a temporary file on this socket and ask port 80 for the file requested by the client
-    fileobj = c.makefile('rb', 0)
-    c.sendall(("GET "+"http://" + filename + " HTTP/1.0\r\n\r\n").encode())
+    print("before send")
+    # Forward the request to the server
+    c.sendall(message_byte)
 
-    # Read the response into buffer
-    buffer = fileobj.readlines()
-        
-    # Create a new file in the cache for the requested file.
-    # Also send the response in the buffer to client socket and the corresponding file in the cache
-    tmpFile = open("./cache/" + filename,"wb")
-    for i in range(0, len(buffer)):
-        tcpCliSock.send(buffer[i])
-        tmpFile.write(buffer[i])
+    print("create file")
+    # Create a new file in the cache for the requested file ONLY if request is GET
+    # Also send the response to client socket and the corresponding file in the cache
+    if method == "GET":
+        tmpFile = open("./cache/" + filename, "wb")
+    else:
+        tmpFile = None
+    
+    print("sending")
+    # modify the template to fix the isssue where the response take long time to process
+    while True:
+        data = c.recv(4096)
+        if not data:
+            c.close()
+            break
+        tcpCliSock.sendall(data)
+        if tmpFile:
+            tmpFile.write(data)
+
+    if tmpFile:
+        tmpFile.close()
