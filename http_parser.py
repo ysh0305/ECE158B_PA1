@@ -1,46 +1,25 @@
-
 def extract_filename(message):
+    # Splits the message to find the URL
+    # Example: "GET http://www.google.com HTTP/1.0" -> "www.google.com"
     filename = message.split()[1].replace("http://", "").replace("https://", "").strip("/").split(":")[0]
     print("filename =", filename)
     return filename
 
 def extract_hostn(filename):
+    # Extracts the hostname from the filename
     hostn = filename.replace("www.", "", 1).split("/")[0]
     print("hostn =", hostn)
     return hostn
 
-def recv_http_request(sock):
-
-    data = sock.recv(4096)
-    message = data.decode()
-
-    # get method from header
+def extract_method(message):
+    # Returns "GET", "POST", etc.
     method = message.split()[0]
+    print("method =", method)
+    return method
 
-    # If POST read the body
-    if method == "POST":
-        header_end = data.find(b"\r\n\r\n")
-        headers = message[:header_end]
-
-        # find Content-Length
-        length = 0
-        for line in headers.split("\r\n"):
-            if line.lower().startswith("content-length:"):
-                length = int(line.split(":", 1)[1].strip())
-                break
-
-        # how many body bytes we already have
-        body = len(data) - (header_end + 4)
-
-        # read remaining body bytes if needed
-        while body < length:
-            chunk = sock.recv(min(4096, length - body))
-            if not chunk:
-                break
-            data += chunk
-            body += len(chunk)
-
-        # decode full request with body
-        message = data.decode()
-
-    return data, message, method
+def extract_body(message):
+    # The body is separated from headers by a double newline (\r\n\r\n)
+    parts = message.split("\r\n\r\n", 1)
+    if len(parts) > 1:
+        return parts[1]
+    return ""
