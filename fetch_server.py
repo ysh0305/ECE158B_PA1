@@ -16,7 +16,7 @@ def fetch_from_server(hostn, filename, tcpCliSock):
         
     # Create a new file in the cache for the requested file.
     # Also send the response in the buffer to client socket and the corresponding file in the cache
-    tmpFile = open("./" + filename,"wb")
+    tmpFile = open("./cache/" + filename,"wb")
     for i in range(0, len(buffer)):
         tcpCliSock.send(buffer[i])
         tmpFile.write(buffer[i])
