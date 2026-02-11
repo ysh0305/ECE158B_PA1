@@ -15,6 +15,8 @@ tcpSerSock = socket(AF_INET, SOCK_STREAM)
 tcpSerSock.bind((sys.argv[1], 8888))
 tcpSerSock.listen(5)
 
+cache_log = {}
+
 while 1:
     # Start receiving data from the client
     print("\n\n--------------------------\n Ready to Serve \n--------------------------")
@@ -31,17 +33,32 @@ while 1:
 
     # Only check cache if the method is GET
     if method == "GET":
-        try:
-            outputdata = read_cache(filename)
-            send_cached_response(tcpCliSock, outputdata)
-            tcpCliSock.close()
-            continue
-        except IOError:
-            pass  # cache miss
-    
+        # Check the internal data structure for a cache hit
+        if filename in cache_log:
+            print(f"Internal Log Hit: {filename} is tracked.")
+            
+            try:
+                outputdata = read_cache(filename)
+                send_cached_response(tcpCliSock, outputdata)
+                tcpCliSock.close()
+                continue
+            except IOError:
+                # If in log but file missing from disk, remove from log and proceed to fetch
+                print("Inconsistency: Logged file missing from disk. Re-fetching...")
+                del cache_log[filename]
+            
+        else:
+            print(f"Internal Log Miss: {filename} not tracked.")
+                
     # fetch from server if post or cache miss
     try:
         fetch_from_server(hostn, filename, tcpCliSock, message_byte, method)
+        
+        # If it was a successful GET fetch, add it to the internal data structure
+        if method == "GET":
+            cache_log[filename] = True
+            print(f"Added to Internal Log: {filename}")
+            
     except:
         tcpCliSock.sendall(b"HTTP/1.0 404 Not Found\r\n")
         tcpCliSock.sendall(b"Content-Type:text/html\r\n\r\n")
