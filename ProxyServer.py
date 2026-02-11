@@ -17,44 +17,38 @@ tcpSerSock.listen(5)
 
 while 1:
     # Start receiving data from the client
-    print('Ready to serve...')
+    print("\n\n--------------------------\n Ready to Serve \n--------------------------")
     tcpCliSock, addr = tcpSerSock.accept()
     print('Received a connection from:', addr)
 
     # Recieve request
-    message = tcpCliSock.recv(4096).decode()
+    message_byte, message, method = recv_http_request(tcpCliSock)
     print(message)
 
     # Extract the filename from the given message
     filename = extract_filename(message)
+    hostn = extract_hostn(filename)
 
-    try:
-        # Check wether the file exist in the cache
-        outputdata = read_cache(filename)
-
-        # ProxyServer finds a cache hit and generates a response message
-        send_cached_response(tcpCliSock, outputdata)
-
-    # Error handling for file not found in cache
-    except IOError:
-        hostn = extract_hostn(filename)
+    # Only check cache if the method is GET
+    if method == "GET":
         try:
-            fetch_from_server(hostn, filename, tcpCliSock)
-
-        #Print error to debug
-        except Exception as e:
-            print(repr(e))
-            # HTTP response message for file not found
-            tcpCliSock.send(b"HTTP/1.0 404 Not Found\r\n")
-            tcpCliSock.send(b"Content-Type:text/html\r\n\r\n")
-            tcpCliSock.send(b"<html><body><h1>404 Not Found</h1></body></html>")
-
-    # Close the client and the server sockets
+            outputdata = read_cache(filename)
+            send_cached_response(tcpCliSock, outputdata)
+            tcpCliSock.close()
+            continue
+        except IOError:
+            pass  # cache miss
+    
+    # fetch from server if post or cache miss
+    try:
+        fetch_from_server(hostn, filename, tcpCliSock, message_byte, method)
+    except:
+        tcpCliSock.sendall(b"HTTP/1.0 404 Not Found\r\n")
+        tcpCliSock.sendall(b"Content-Type:text/html\r\n\r\n")
+        tcpCliSock.sendall(b"<html><body><h1>404 Not Found</h1></body></html>")
     tcpCliSock.close()
 
-# Fill in start.
 tcpSerSock.close()
 sys.exit(0)
-# Fill in end.
 
 
