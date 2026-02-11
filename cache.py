@@ -1,6 +1,6 @@
 # Check wether the file exist in the cache
 def read_cache(filename):
-    filetouse = "/" + filename
+    filetouse = "/cache/" + filename
     f = open(filetouse[1:], "rb")
     outputdata = f.readlines()
     print('Read from cache')
