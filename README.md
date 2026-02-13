@@ -13,12 +13,12 @@ In one terminal (from the repo root):
 
 ```bash
 mkdir -p cache
-python3 ProxyServer.py
+python3 ProxyServer.py <server_ip>
 ```
 
 Your proxy server should listen on:
 
-- `http://localhost:8888`
+- `http://<server_ip>:8888`
 
 ---
 
