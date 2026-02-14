@@ -36,7 +36,7 @@ curl -v -x http://localhost:8888 http://eu.httpbin.org/
 To test POST support, run this command in your terminal:
 
 ```
-curl -v -x http://localhost:8888 \                     
+curl -v -x http://localhost:8888 \
   -X POST http://eu.httpbin.org/post \
   -d "test_post_support_for_my_proxy_server"
 ```
@@ -51,4 +51,4 @@ I implemented caching with a simple Python dict where:
 ---
 ### Demo video
 
-Demo video link: (www.google.com)
+Demo video link: ([Video](https://app.screencastify.com/watch/sboWlJitArgSINyDmzFs?checkOrg=12b78290-b232-449e-8113-4c1a1a79fb0c))
